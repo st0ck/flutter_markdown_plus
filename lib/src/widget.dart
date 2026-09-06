@@ -383,7 +383,9 @@ class _MarkdownWidgetState extends State<MarkdownWidget> implements MarkdownBuil
   @override
   void didUpdateWidget(MarkdownWidget oldWidget) {
     super.didUpdateWidget(oldWidget);
-    if (widget.data != oldWidget.data || widget.styleSheet != oldWidget.styleSheet) {
+    if (widget.data != oldWidget.data ||
+        widget.styleSheet != oldWidget.styleSheet ||
+        widget.paragraphDirectionBuilder != oldWidget.paragraphDirectionBuilder) {
       _parseMarkdown();
     }
   }

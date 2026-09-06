@@ -30,6 +30,86 @@ Iterable<TextSpan> _textSpans(InlineSpan span) sync* {
 }
 
 void defineTests() {
+  for (final bool scrollable in <bool>[false, true]) {
+    for (final bool selectable in <bool>[false, true]) {
+      for (final TextDirection ambient in TextDirection.values) {
+        testWidgets('mounted callback updates scrollable=$scrollable selectable=$selectable ambient=$ambient',
+            (WidgetTester tester) async {
+          const String data = 'Hello [link](https://example.org).';
+          const Key key = ValueKey<String>('markdown');
+          final MarkdownStyleSheet style = MarkdownStyleSheet(p: const TextStyle(fontSize: 16));
+          final List<MarkdownParagraphDirectionBuilder?> callbacks = <MarkdownParagraphDirectionBuilder?>[
+            null,
+            (InlineSpan span) => TextDirection.ltr,
+            (InlineSpan span) => TextDirection.rtl,
+            null,
+            (InlineSpan span) => TextDirection.rtl,
+            (InlineSpan span) => null,
+          ];
+          final List<TextDirection> expected = <TextDirection>[
+            ambient,
+            TextDirection.ltr,
+            TextDirection.rtl,
+            ambient,
+            TextDirection.rtl,
+            ambient
+          ];
+          int step = 0;
+          int taps = 0;
+          late StateSetter rebuild;
+          void onTapLink(String text, String? href, String title) {
+            expect(href, 'https://example.org');
+            taps++;
+          }
+
+          await tester.pumpWidget(_host(StatefulBuilder(builder: (BuildContext context, StateSetter setState) {
+            rebuild = setState;
+            return scrollable
+                ? Markdown(
+                    key: key,
+                    data: data,
+                    styleSheet: style,
+                    selectable: selectable,
+                    paragraphDirectionBuilder: callbacks[step],
+                    onTapLink: onTapLink)
+                : MarkdownBody(
+                    key: key,
+                    data: data,
+                    styleSheet: style,
+                    selectable: selectable,
+                    paragraphDirectionBuilder: callbacks[step],
+                    onTapLink: onTapLink);
+          }), ambient));
+          final State<StatefulWidget> originalState = tester.state(find.byKey(key));
+          for (int next = 0; next < callbacks.length; next++) {
+            if (next > 0) {
+              rebuild(() => step = next);
+              await tester.pump();
+            }
+            expect(tester.state(find.byKey(key)), same(originalState));
+            final MarkdownWidget mounted = tester.widget<MarkdownWidget>(find.byKey(key));
+            expect(mounted.data, data);
+            expect(mounted.styleSheet, same(style));
+            if (selectable) {
+              final RenderEditable editable = tester.state<EditableTextState>(find.byType(EditableText)).renderEditable;
+              expect(editable.textDirection, expected[next], reason: 'update step $next');
+              final Rect box =
+                  editable.getBoxesForSelection(const TextSelection(baseOffset: 6, extentOffset: 10)).first.toRect();
+              await tester.tapAt(editable.localToGlobal(box.center));
+            } else {
+              final Finder rendered = find.descendant(of: find.byKey(key), matching: find.byType(RichText));
+              expect(tester.renderObject<RenderParagraph>(rendered).textDirection, expected[next],
+                  reason: 'update step $next');
+              await tester.tapOnText(find.textRange.ofSubstring('link'));
+            }
+            await tester.pump();
+            expect(taps, next + 1, reason: 'exactly one link callback after each update');
+            expect(tester.takeException(), isNull);
+          }
+        });
+      }
+    }
+  }
   for (final bool selectable in <bool>[false, true]) {
     for (final TextDirection ambient in TextDirection.values) {
       for (final bool reverse in <bool>[false, true]) {
