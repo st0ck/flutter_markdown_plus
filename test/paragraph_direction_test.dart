@@ -109,6 +109,30 @@ void defineTests() {
         });
       }
     }
+    testWidgets('start alignment uses paragraph direction, selectable=$selectable', (WidgetTester tester) async {
+      await tester.pumpWidget(_host(
+        SizedBox(
+            width: 600,
+            child: MarkdownBody(
+              data: 'Hello.\n\nمرحبا.',
+              selectable: selectable,
+              fitContent: false,
+              paragraphDirectionBuilder: _direction,
+            )),
+        TextDirection.ltr,
+      ));
+      for (final String text in <String>['Hello.', 'مرحبا.']) {
+        final Finder widget = find.byWidgetPredicate((Widget w) => selectable
+            ? w is SelectableText && w.textSpan?.toPlainText() == text
+            : w is Text && w.textSpan?.toPlainText() == text);
+        final Rect bounds = tester.getRect(widget);
+        if (text == 'Hello.') {
+          expect(bounds.left, closeTo(0, 0.1));
+        } else {
+          expect(bounds.right, closeTo(600, 0.1));
+        }
+      }
+    });
     testWidgets('preserves tappable link and inline code, selectable=$selectable', (WidgetTester tester) async {
       int taps = 0;
       await tester.pumpWidget(_host(

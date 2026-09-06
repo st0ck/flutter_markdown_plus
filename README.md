@@ -288,6 +288,7 @@ algorithm:
 ```dart
 MarkdownBody(
   data: markdown,
+  fitContent: false, // Allow start alignment across the available width.
   paragraphDirectionBuilder: (span) => directionForVisibleText(
     span.toPlainText(includeSemanticsLabels: false),
   ),
