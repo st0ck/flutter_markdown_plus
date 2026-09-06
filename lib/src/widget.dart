@@ -31,6 +31,15 @@ typedef MarkdownOnSelectionChangedCallback = void Function(
 /// Used by [MarkdownWidget.onTapLink].
 typedef MarkdownTapLinkCallback = void Function(String text, String? href, String title);
 
+/// Selects the base direction of an assembled prose paragraph.
+///
+/// The span contains the renderer's existing text, styles and link recognizers.
+/// Use its visible text to classify direction, without changing the span. For
+/// example, use `span.toPlainText(includeSemanticsLabels: false)` with the
+/// application's direction policy. Image/custom-widget content is not included.
+/// Return null to inherit the surrounding [Directionality].
+typedef MarkdownParagraphDirectionBuilder = TextDirection? Function(InlineSpan span);
+
 /// Signature for custom image widget.
 ///
 /// Used by [MarkdownWidget.imageBuilder]
@@ -213,6 +222,7 @@ abstract class MarkdownWidget extends StatefulWidget {
     this.onSelectionChanged,
     this.onTapLink,
     this.onTapText,
+    this.paragraphDirectionBuilder,
     this.contextMenuBuilder = _defaultContextMenuBuilder,
     this.imageDirectory,
     this.blockSyntaxes,
@@ -235,6 +245,16 @@ abstract class MarkdownWidget extends StatefulWidget {
   ///
   /// Defaults to false.
   final bool selectable;
+
+  /// Optionally selects direction independently for each prose paragraph.
+  ///
+  /// Includes paragraphs inside lists and blockquotes, and anonymous prose in
+  /// tight list items. Applies to both selectable and non-selectable text.
+  /// Headings, fenced code, tables and list markers retain their normal direction.
+  /// Spans and inline widgets are rendered unchanged. A paragraph interrupted by
+  /// an image/custom widget shares one direction across its text segments.
+  /// If omitted, or if it returns null, existing inherited behavior is unchanged.
+  final MarkdownParagraphDirectionBuilder? paragraphDirectionBuilder;
 
   /// The styles to use when displaying the Markdown.
   ///
@@ -407,6 +427,7 @@ class _MarkdownWidgetState extends State<MarkdownWidget> implements MarkdownBuil
       listItemCrossAxisAlignment: widget.listItemCrossAxisAlignment,
       onSelectionChanged: widget.onSelectionChanged,
       onTapText: widget.onTapText,
+      paragraphDirectionBuilder: widget.paragraphDirectionBuilder,
       contextMenuBuilder: widget.contextMenuBuilder,
       softLineBreak: widget.softLineBreak,
     );
@@ -471,6 +492,7 @@ class MarkdownBody extends MarkdownWidget {
     super.onSelectionChanged,
     super.onTapLink,
     super.onTapText,
+    super.paragraphDirectionBuilder,
     super.contextMenuBuilder,
     super.imageDirectory,
     super.blockSyntaxes,
@@ -526,6 +548,7 @@ class Markdown extends MarkdownWidget {
     super.onSelectionChanged,
     super.onTapLink,
     super.onTapText,
+    super.paragraphDirectionBuilder,
     super.contextMenuBuilder,
     super.imageDirectory,
     super.blockSyntaxes,
