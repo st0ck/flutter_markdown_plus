@@ -115,6 +115,7 @@ class MarkdownBuilder implements md.NodeVisitor {
     this.onSelectionChanged,
     this.onTapText,
     this.paragraphDirectionBuilder,
+    this.forceStrutHeight = true,
     this.contextMenuBuilder,
     this.softLineBreak = false,
   });
@@ -166,6 +167,9 @@ class MarkdownBuilder implements md.NodeVisitor {
 
   /// Optionally selects direction for assembled prose paragraphs.
   final MarkdownParagraphDirectionBuilder? paragraphDirectionBuilder;
+
+  /// Preserve fixed prose line heights by default; disable for tall inline widgets.
+  final bool forceStrutHeight;
 
   /// Builds the text selection toolbar when [selectable] is set to true.
   ///
@@ -1025,7 +1029,7 @@ class MarkdownBuilder implements md.NodeVisitor {
             fontSize: baseStyle.fontSize ?? styleSheet.p?.fontSize,
             height: baseStyle.height ?? styleSheet.p?.height,
             leading: 0,
-            forceStrutHeight: true,
+            forceStrutHeight: forceStrutHeight,
           )
         : null;
     if (selectable) {

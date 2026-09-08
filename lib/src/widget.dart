@@ -223,6 +223,7 @@ abstract class MarkdownWidget extends StatefulWidget {
     this.onTapLink,
     this.onTapText,
     this.paragraphDirectionBuilder,
+    this.forceStrutHeight = true,
     this.contextMenuBuilder = _defaultContextMenuBuilder,
     this.imageDirectory,
     this.blockSyntaxes,
@@ -255,6 +256,9 @@ abstract class MarkdownWidget extends StatefulWidget {
   /// an image/custom widget shares one direction across its text segments.
   /// If omitted, or if it returns null, existing inherited behavior is unchanged.
   final MarkdownParagraphDirectionBuilder? paragraphDirectionBuilder;
+
+  /// Preserve fixed prose line heights by default; disable for tall inline widgets.
+  final bool forceStrutHeight;
 
   /// The styles to use when displaying the Markdown.
   ///
@@ -385,7 +389,8 @@ class _MarkdownWidgetState extends State<MarkdownWidget> implements MarkdownBuil
     super.didUpdateWidget(oldWidget);
     if (widget.data != oldWidget.data ||
         widget.styleSheet != oldWidget.styleSheet ||
-        widget.paragraphDirectionBuilder != oldWidget.paragraphDirectionBuilder) {
+        widget.paragraphDirectionBuilder != oldWidget.paragraphDirectionBuilder ||
+        widget.forceStrutHeight != oldWidget.forceStrutHeight) {
       _parseMarkdown();
     }
   }
@@ -430,6 +435,7 @@ class _MarkdownWidgetState extends State<MarkdownWidget> implements MarkdownBuil
       onSelectionChanged: widget.onSelectionChanged,
       onTapText: widget.onTapText,
       paragraphDirectionBuilder: widget.paragraphDirectionBuilder,
+      forceStrutHeight: widget.forceStrutHeight,
       contextMenuBuilder: widget.contextMenuBuilder,
       softLineBreak: widget.softLineBreak,
     );
@@ -495,6 +501,7 @@ class MarkdownBody extends MarkdownWidget {
     super.onTapLink,
     super.onTapText,
     super.paragraphDirectionBuilder,
+    super.forceStrutHeight,
     super.contextMenuBuilder,
     super.imageDirectory,
     super.blockSyntaxes,
@@ -551,6 +558,7 @@ class Markdown extends MarkdownWidget {
     super.onTapLink,
     super.onTapText,
     super.paragraphDirectionBuilder,
+    super.forceStrutHeight,
     super.contextMenuBuilder,
     super.imageDirectory,
     super.blockSyntaxes,
